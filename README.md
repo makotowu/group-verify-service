@@ -121,14 +121,14 @@ php think run
 ```
 src/
 ├── app/
-│   ├── command/          # 命令行工具
+│   ├── command/                    # 命令行工具
 │   │   └── InitDatabase.php        # 数据库初始化命令
-│   ├── controller/       # 控制器
-│   │   ├── Index.php              # 默认控制器
+│   ├── controller/                 # 控制器
+│   │   ├── Index.php               # 默认控制器
 │   │   └── VerifyController.php    # 验证码相关接口
-│   ├── middleware/       # 中间件
+│   ├── middleware/                 # 中间件
 │   │   └── ApiAuth.php            # API 密钥认证中间件
-│   ├── model/            # 模型
+│   ├── model/                     # 模型
 │   │   ├── GeetestModel.php       # 极验验证业务逻辑
 │   │   └── GeetestTable.php       # 数据库模型
 │   ├── BaseController.php         # 基础控制器
@@ -140,7 +140,7 @@ src/
 │   ├── middleware.php             # 中间件配置
 │   ├── provider.php               # 服务提供者
 │   └── service.php                # 服务定义
-├── config/               # 配置文件加载器
+├── config/                       # 配置文件加载器
 │   ├── app.php                   # 应用配置
 │   ├── database.php              # 数据库配置
 │   ├── geetest.php               # 极验配置
@@ -150,28 +150,28 @@ src/
 │   ├── route.php                 # 路由配置
 │   ├── session.php               # 会话配置
 │   └── ...                       # 其他配置文件
-├── database/             # 数据库文件
+├── database/                     # 数据库文件
 │   ├── migrations/
 │   │   └── Geetest_Table.sql     # 数据库迁移文件
 │   └── .gitkeep
-├── public/               # 静态资源和入口文件
+├── public/                       # 静态资源和入口文件
 │   ├── index.php                 # 应用入口
 │   ├── router.php                # 路由文件
 │   ├── runtime/                  # 运行时文件
 │   │   └── Geetest/              # 极验缓存
 │   └── static/                   # 静态资源
-├── route/                # 路由配置
+├── route/                       # 路由配置
 │   └── app.php                   # 路由定义
-├── extend/               # 扩展类库
+├── extend/                     # 扩展类库
 │   └── .gitignore
-├── runtime/              # 运行时缓存
+├── runtime/                    # 运行时缓存
 │   └── .gitignore
-├── .example.env          # 环境变量模板
-├── .gitignore            # Git 忽略文件
-├── .htaccess             # Apache 配置
-├── .travis.yml           # Travis CI 配置
-├── composer.json         # Composer 配置
-└── think                 # ThinkPHP 命令行工具
+├── .example.env                # 环境变量模板
+├── .gitignore                  # Git 忽略文件
+├── .htaccess                   # Apache 配置
+├── .travis.yml                 # Travis CI 配置
+├── composer.json               # Composer 配置
+└── think                       # ThinkPHP 命令行工具
 ```
 
 ## API 文档

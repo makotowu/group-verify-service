@@ -41,6 +41,9 @@
 - ThinkPHP 8.0
 - ThinkORM 3.0/4.0
 - SQLite 数据库
+- Vue 3
+- ArcoDesign Vue
+- Vite
 
 ## 功能特性
 
@@ -65,7 +68,7 @@
 1. 准备发布包
 
 - 直接使用仓库自带的 `vendor/`（已包含依赖）
-- 如果你更新了依赖，需要在本地/CI 重新生成 `vendor/`（在 `src/` 目录执行）：
+- 如果你更新了依赖，需要在本地/CI 重新生成 `vendor/`（在 `backend/` 目录执行）：
 
 ```bash
 composer install --no-dev -o
@@ -79,20 +82,54 @@ composer install --no-dev -o
 
 2. 上传到服务器
 
-- 上传 `src/` 目录下的所有文件（包含 `vendor/`）
-- 站点运行目录/网站目录指向 `public/`（即 `src/public`）
+- 上传 `backend/` 目录下的所有文件（包含 `vendor/`）
+- 站点运行目录/网站目录指向 `backend/public/`
 - 确保 `runtime/`、`database/` 目录可写
+
+> Nginx 用户请务必配置伪静态（否则 ThinkPHP 路由可能无法生效），并禁止直接访问运行目录。示例（放在 `server {}` 中）：
+>
+> ```nginx
+> location ~* (runtime|application)/{
+>     return 403;
+> }
+> location / {
+>     if (!-e $request_filename){
+>         rewrite  ^(.*)$  /index.php?s=$1  last;   break;
+>     }
+> }
+> ```
 
 3. 首次初始化
 
 - 访问 `https://你的域名/setup`
 - 按页面提示填写 `GEETEST_CAPTCHA_ID`、`GEETEST_CAPTCHA_KEY`、`API_KEY`、`SALT` 等
 - 提交后会自动生成 `.env` 并初始化 SQLite 数据库
+- 仅首次安装可用：当 `.env` 已存在时，`/setup` 会返回 404
+
+### 前端构建产物（提交代码时自动同步到后端 public）
+
+前端源码在 `frontend/`，构建产物输出到 `backend/public/static/verify/`，后端通过 `GET /v/:ticket` 提供验证页面入口。
+
+如需“提交代码时自动构建并把产物写入后端 public”，可启用仓库内置的 git hook：
+
+```bash
+git config core.hooksPath githooks
+```
+
+启用后，当本次提交涉及前端相关变更时会自动执行：
+
+```bash
+cd frontend && npm run build
+```
+
+说明：
+- 仅当本次提交的暂存区包含 `frontend/` 或 `backend/public/static/verify/` 的变更时才会执行构建
+- 若需要构建但构建失败（或未安装 npm），会直接阻止提交
 
 ## 项目结构
 
 ```
-src/
+backend/
 ├── app/
 │   ├── command/                    # 命令行工具
 │   │   └── InitDatabase.php        # 数据库初始化命令
@@ -130,9 +167,8 @@ src/
 ├── public/                       # 静态资源和入口文件
 │   ├── index.php                 # 应用入口
 │   ├── router.php                # 路由文件
-│   ├── runtime/                  # 运行时文件
-│   │   └── Geetest/              # 极验缓存
 │   └── static/                   # 静态资源
+│       └── verify/               # 前端构建产物（Vue）
 ├── route/                       # 路由配置
 │   └── app.php                   # 路由定义
 ├── extend/                     # 扩展类库
@@ -145,6 +181,14 @@ src/
 ├── .travis.yml                 # Travis CI 配置
 ├── composer.json               # Composer 配置
 └── think                       # ThinkPHP 命令行工具
+
+frontend/
+├── index.html
+├── package.json
+├── vite.config.js
+└── src/
+    ├── main.js
+    └── App.vue
 ```
 
 ## API 文档
@@ -203,11 +247,44 @@ Authorization: Bearer 你的API密钥
 |--------|------|------|------|
 | ticket | string | 是 | 验证令牌（URL 路径参数） |
 
-**返回**：HTML 验证页面
+**返回**：HTML（SPA 入口页面，前端会调用状态接口查询 ticket 是否有效）
 
 **错误响应**：
-- 验证链接不存在：返回 400 状态码和"验证链接已过期或不存在"
-- 已完成验证：显示验证码信息
+- ticket 为空：返回 400 状态码和"无效的验证链接"
+
+### 2.1 票据状态
+
+**接口地址**：`GET /verify/status/:ticket`
+
+**认证方式**：无需认证
+
+**返回示例**（未验证）：
+
+```json
+{
+  "code": 0,
+  "msg": "success",
+  "data": {
+    "ticket": "xxx",
+    "verified": false,
+    "captcha_id": "你的captcha_id"
+  }
+}
+```
+
+**返回示例**（已验证）：
+
+```json
+{
+  "code": 0,
+  "msg": "success",
+  "data": {
+    "ticket": "xxx",
+    "verified": true,
+    "code": "A3B5C7"
+  }
+}
+```
 
 ### 3. 极验验证回调
 
@@ -323,7 +400,7 @@ Authorization: Bearer 你的API密钥
 ### 1. 运行开发服务器
 
 ```bash
-php think run
+cd backend && php think run
 ```
 
 ### 2. 代码规范
@@ -371,7 +448,7 @@ php think run
 
 ## 配置说明
 
-首次部署时，如果还没有 `.env`，可以直接访问 `/setup` 走页面初始化生成 `.env` 并初始化 SQLite 数据库（`.env` 已存在时该页面会提示无需再次初始化）。
+首次部署时，如果还没有 `.env`，可以直接访问 `/setup` 走页面初始化生成 `.env` 并初始化 SQLite 数据库（`.env` 已存在时 `/setup` 会返回 404）。
 
 ### 极验配置
 
@@ -383,7 +460,6 @@ php think run
 | GEETEST_CAPTCHA_KEY | string | - | 极验验证码 Key |
 | GEETEST_API_SERVER | string | https://gcaptcha4.geetest.com | 极验 API 服务器地址 |
 | GEETEST_CODE_EXPIRE | int | 300 | 验证码有效期（秒） |
-| GEETEST_STORAGE_PATH | string | runtime/Geetest/ | 验证码存储路径 |
 
 ### API 密钥配置
 

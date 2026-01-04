@@ -26,6 +26,7 @@ Route::group('verify', function () {
     
     // 不需要API密钥认证的路由
     Route::post('callback', 'VerifyController/callback'); // 前端提交：极验验证回调
+    Route::get('status/:ticket', 'VerifyController/status');
 });
 
 // 短链接路由

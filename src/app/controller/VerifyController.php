@@ -82,9 +82,11 @@ class VerifyController extends BaseController
         }
         
         $captchaId = $GeetestModel->getCaptchaId();
+        $codeExpire = $GeetestModel->getCodeExpire();
+        $expireMinutes = ceil($codeExpire / 60);
         
         //返回极验验证页面
-        $html = $this->renderVerifyPage($ticket, $captchaId);
+        $html = $this->renderVerifyPage($ticket, $captchaId, $expireMinutes);
         
         return response($html)->contentType('text/html');
     }
@@ -229,7 +231,7 @@ class VerifyController extends BaseController
     /**
      * 渲染验证页面HTML
      */
-    private function renderVerifyPage(string $token, string $captchaId): string
+    private function renderVerifyPage(string $token, string $captchaId, int $expireMinutes): string
     {
         return '<!DOCTYPE html>
 <html lang="zh-CN">
@@ -511,6 +513,7 @@ class VerifyController extends BaseController
     <script>
         var TOKEN = "' . htmlspecialchars($token) . '";
         var CAPTCHA_ID = "' . htmlspecialchars($captchaId) . '";
+        var EXPIRE_MINUTES = ' . $expireMinutes . ';
         var captchaObj = null;
         var isGeetestLoaded = false;
         var btn = document.getElementById("btn-verify");
@@ -711,7 +714,7 @@ class VerifyController extends BaseController
             resultDiv.className = "result success";
             document.getElementById("result-text").innerHTML = "✅ 验证成功！您的验证码是：";
             codeDisplay.textContent = code;
-            tip.innerHTML = "请复制此验证码，在群内发送以完成入群验证<br>验证码5分钟内有效。";
+            tip.innerHTML = "请复制此验证码，在群内发送以完成入群验证<br>验证码" + EXPIRE_MINUTES + "分钟内有效，请及时使用。";
             
             copyBtn.style.display = "inline-block";
             status.style.display = "none";
